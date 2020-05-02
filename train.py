@@ -19,7 +19,7 @@ val_loader = DataLoader(dataset=valset, batch_size=len(valset), shuffle=False)
 
 num_hidden = 1
 hidden_size = 10
-num_epoch = 10
+num_epoch = 50
 print("Num Hidden: "+str(num_hidden))
 print("Hidden Size: "+str(hidden_size))
 print("Num Epoch: "+str(num_epoch))
@@ -29,7 +29,6 @@ net = DNN(num_hidden=num_hidden,hidden_size=hidden_size)
 criterion = torch.nn.MSELoss(reduction='mean')
 optimizer = torch.optim.Adam(net.parameters(),lr=0.00001)
 
-tr_mse_log = open('logs/tr_mse_logs/epoch{0}_numh{1}_hsize{2}_{3}.txt'.format(num_epoch, num_hidden, hidden_size, time),'w')
 
 def evaluate_mse(criterion, data_loader):
     net.eval()
@@ -42,7 +41,7 @@ def evaluate_mse(criterion, data_loader):
 
 def train(criterion, optimizer, train_loader, val_loader,ct_tr = False):
     if ct_tr:
-        net.load_state_dict(torch.load("logs/dicts/epoch10_numh1_hsize10_2020-05-02-20-16-16_ct_tr2020-05-02-20-06-34"))
+        net.load_state_dict(torch.load("logs/dicts/epoch10_numh1_hsize10_2020-05-02-20-35-31_ct_tr2020-05-02-20-16-16"))
     for epoch in range(num_epoch):
         net.train()
         for i,(init_pos,t_pos) in enumerate(train_loader):
@@ -58,7 +57,7 @@ def train(criterion, optimizer, train_loader, val_loader,ct_tr = False):
         # print(" ")
     path = 'logs/dicts/epoch{0}_numh{1}_hsize{2}_{3}'.format(num_epoch, num_hidden, hidden_size, time)
     if ct_tr:
-        path += "_ct_tr2020-05-02-20-16-16"
+        path += "_ct_tr2020-05-02-20-35-31"
     torch.save(net.state_dict(), path)
     net.load_state_dict(torch.load(path))
 
@@ -94,18 +93,53 @@ def get_track(data_loader,ct_tr = False):
 
     fig_path = 'logs/figs/epoch{0}_numh{1}_hsize{2}_{3}.png'.format(num_epoch, num_hidden, hidden_size, time)
     if ct_tr:
-        fig_path = fig_path[:-4] + "_ct_tr2020-05-02-20-16-16.png" 
+        fig_path = fig_path[:-4] + "_ct_tr2020-05-02-20-35-31.png" 
     fig.savefig(fig_path)
     plt.show()
 
-train(criterion,optimizer,train_loader,val_loader,ct_tr=True)
-test_mse = evaluate_mse(criterion,test_loader)
-print("Test MSE: " + str(test_mse.item()))
-tr_mse_log.write("Test MSE: " + str(test_mse.item())+"\n")
-#print(testset[0])
-get_track(test_loader,ct_tr=True)
-tr_mse_log.close()
+def find_good_track(data_loader):
+    net.load_state_dict(torch.load("logs/dicts/epoch10_numh1_hsize10_2020-05-02-20-35-31_ct_tr2020-05-02-20-16-16"))
+    for k in range(0,len(testset),101):
+        with torch.no_grad():
+            for i,(init_pos,t_pos) in enumerate(data_loader):
+                init_pos = init_pos[k:k+101]
+                t_pos = t_pos[k:k+101]
+            pre_tpos = net(init_pos)
+        fig = plt.figure()
+        plt.subplot(3,1,1)
+        plt.plot(pre_tpos[:, 0], pre_tpos[:, 1], color='red',linestyle='--')
+        plt.plot(t_pos[:,0],t_pos[:,1], color='red',linestyle='-')
+        
+        plt.plot(pre_tpos[:, 2], pre_tpos[:, 3], color='blue',linestyle='--')
+        plt.plot(t_pos[:,2],t_pos[:,3], color='blue',linestyle='-')
+        
+        plt.plot(pre_tpos[:, 4], pre_tpos[:, 5], color='green',linestyle='--')
+        plt.plot(t_pos[:,4],t_pos[:,5], color='green',linestyle='-')
 
+        plt.subplot(3,1,2)
+        plt.plot(pre_tpos[:, 0], pre_tpos[:, 1], color='red',linestyle='--')
+        plt.plot(pre_tpos[:, 2], pre_tpos[:, 3], color='blue',linestyle='--')
+        plt.plot(pre_tpos[:, 4], pre_tpos[:, 5], color='green',linestyle='--')
+        
+        plt.subplot(3,1,3)
+        plt.plot(t_pos[:,0],t_pos[:,1], color='red',linestyle='-')
+        plt.plot(t_pos[:,2],t_pos[:,3], color='blue',linestyle='-')
+        plt.plot(t_pos[:,4],t_pos[:,5], color='green',linestyle='-')
+
+        fig_path = 'logs/figs/find_good_track/epoch120/' + str(int(k/101)) + '.png'
+        fig.savefig(fig_path)
+        plt.close()
+    
+# tr_mse_log = open('logs/tr_mse_logs/epoch{0}_numh{1}_hsize{2}_{3}.txt'.format(num_epoch, num_hidden, hidden_size, time),'w')
+# train(criterion,optimizer,train_loader,val_loader,ct_tr=True)
+# test_mse = evaluate_mse(criterion,test_loader)
+# print("Test MSE: " + str(test_mse.item()))
+# tr_mse_log.write("Test MSE: " + str(test_mse.item())+"\n")
+# #print(testset[0])
+# get_track(test_loader,ct_tr=True)
+# tr_mse_log.close()
+
+find_good_track(test_loader)
 
 
 
