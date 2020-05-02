@@ -130,16 +130,16 @@ def find_good_track(data_loader):
         fig.savefig(fig_path)
         plt.close()
     
-# tr_mse_log = open('logs/tr_mse_logs/epoch{0}_numh{1}_hsize{2}_{3}.txt'.format(num_epoch, num_hidden, hidden_size, time),'w')
-# train(criterion,optimizer,train_loader,val_loader,ct_tr=True)
-# test_mse = evaluate_mse(criterion,test_loader)
-# print("Test MSE: " + str(test_mse.item()))
-# tr_mse_log.write("Test MSE: " + str(test_mse.item())+"\n")
-# #print(testset[0])
-# get_track(test_loader,ct_tr=True)
-# tr_mse_log.close()
+tr_mse_log = open('logs/tr_mse_logs/epoch{0}_numh{1}_hsize{2}_{3}.txt'.format(num_epoch, num_hidden, hidden_size, time),'w')
+train(criterion,optimizer,train_loader,val_loader,ct_tr=True)
+test_mse = evaluate_mse(criterion,test_loader)
+print("Test MSE: " + str(test_mse.item()))
+tr_mse_log.write("Test MSE: " + str(test_mse.item())+"\n")
+#print(testset[0])
+get_track(test_loader,ct_tr=True)
+tr_mse_log.close()
 
-find_good_track(test_loader)
+# find_good_track(test_loader)
 
 
 
